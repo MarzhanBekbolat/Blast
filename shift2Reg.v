@@ -26,23 +26,29 @@ input rst,
 input load,
 input shift,
 input [511:0] inData,
+input dataValid,
 output [511:0] outData
 );
 
 reg [533:0] shiftReg;
 
-assign outData = shiftReg[533:22];
+assign outData = shiftReg[511:0];
 
 always @(posedge clk)
 begin
+    /*if(rst)
+    shiftReg <=0;
+    else
+    begin*/
     if(load & shift)
     begin
-        shiftReg[513:0] <= {inData,2'b00};
-        shiftReg[533:514] <= {shiftReg[531:512]};
+        shiftReg[533:20] <= {2'b00,inData};
+        shiftReg[19:0] <= {shiftReg[21:2]};
     end
     else if(load)
-        shiftReg[511:0] <= inData;
+        shiftReg[533:0] <= {22'h0,inData};
     else if(shift)
-        shiftReg <= {shiftReg[531:0],2'b00};
-end
+        shiftReg <= {2'b00,shiftReg[533:2]};
+  end
+  //end
 endmodule
