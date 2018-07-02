@@ -72,7 +72,7 @@ output hitTEST
             SHIFT = 3'b011,
             SHIFTLOAD =3'b100,
             WAIT_EXP = 3'b010,
-            WAIT_HIT = 3'b101;
+            WAIT_S = 3'b101;
  assign ShiftNoReg = ShiftNo;
  always @(posedge clk)
  begin
@@ -156,7 +156,7 @@ output hitTEST
                        else if (ShiftNo != 0 & (ShiftNo % 490 != 0))
                                     begin
                                     shift <=1'b0;
-                                    state<= WAIT_HIT;
+                                    state<= SHIFT;
                                     end
                        else if (ShiftNo % 490 == 0)
                                     begin
@@ -184,7 +184,7 @@ output hitTEST
                else if (ShiftNo != 0 & (ShiftNo % 512 != 0))
                             begin
                             shift <=1'b0;
-                            state<= WAIT_HIT;
+                            state<= SHIFT;
                             end
                else if (ShiftNo % 512 == 0)
                             begin
@@ -210,13 +210,16 @@ output hitTEST
         end
       end
       SHIFT: begin
+       if(!hit)
+       begin
         shift <= 1'b1;
       load <= 1'b0;
       state <= SHIFTLOAD;
       end
+      end
       SHIFTLOAD: begin
       shift <= 1'b0;
-      state <= IDLE;
+      state <= WAIT_S;
       end
      WAIT_EXP: begin
               if(ddr_rd_valid & ddr_rd_done)
@@ -229,13 +232,8 @@ output hitTEST
                 state <= IDLE;
               end
             end
-            WAIT_HIT: begin
-            if(!hit)
-            begin
-            shift <=1'b1;
-            state <= IDLE;
-            end
-           
+            WAIT_S: begin
+                   state <= IDLE;
             end
      endcase
      end
