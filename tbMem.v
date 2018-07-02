@@ -54,7 +54,7 @@ begin
      @(posedge clk);
      @(posedge clk);
     ddr_rd_valid <= 1'b1;
-     ddr_rd_data = 512'h11;
+     ddr_rd_data = 512'hc0;
      @(posedge clk);
      @(posedge clk);
      ddr_rd_done <= 1'b1;
@@ -87,6 +87,50 @@ begin
          @(posedge clk);
          @(posedge clk);
          @(posedge clk);
+          wait(ddr_rd);///////
+             @(posedge clk);
+             queryValid <= 1'b0;
+             @(posedge clk);
+             @(posedge clk);
+             @(posedge clk);
+             @(posedge clk);
+             @(posedge clk);
+            ddr_rd_valid <= 1'b1;
+             ddr_rd_data = 512'hc0;
+             @(posedge clk);
+             @(posedge clk);
+             ddr_rd_done <= 1'b1;
+             @(posedge clk);
+            ddr_rd_valid <= 1'b0;
+            ddr_rd_done <= 1'b0;
+             @(posedge clk);
+             @(posedge clk);
+             @(posedge clk);
+             @(posedge clk);
+             @(posedge clk);
+             @(posedge clk);
+              wait(ddr_rd);///////
+                 @(posedge clk);
+                 queryValid <= 1'b0;
+                 @(posedge clk);
+                 @(posedge clk);
+                 @(posedge clk);
+                 @(posedge clk);
+                 @(posedge clk);
+                ddr_rd_valid <= 1'b1;
+                 ddr_rd_data = 512'hc0;
+                 @(posedge clk);
+                 @(posedge clk);
+                 ddr_rd_done <= 1'b1;
+                 @(posedge clk);
+                ddr_rd_valid <= 1'b0;
+                ddr_rd_done <= 1'b0;
+                 @(posedge clk);
+                 @(posedge clk);
+                 @(posedge clk);
+                 @(posedge clk);
+                 @(posedge clk);
+                 @(posedge clk); 
 end
 
 
