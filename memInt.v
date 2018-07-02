@@ -95,6 +95,7 @@ output hitTEST
    else 
      begin
      queryValidQ <=1'b1;
+     queryValidReg <= 1'b1;
      case (state)
      IDLE: begin
      /*if(!hit)
@@ -128,6 +129,7 @@ output hitTEST
              begin
              hitReg <= 1'b1;
              locationQReg <= locationQ;
+             loadDone <= 1'b0;
              if(loadExpOut)
              begin
              //queryValidExp <= 1'b1;
@@ -216,6 +218,8 @@ output hitTEST
       load <= 1'b0;
       state <= SHIFTLOAD;
       end
+      else 
+      state <= IDLE;
       end
       SHIFTLOAD: begin
       shift <= 1'b0;
@@ -228,8 +232,12 @@ output hitTEST
                 queryValidExp <= 1'b1;
                 dbExpand <= ddr_rd_data;
                 ddr_rd <=1'b0;
-                if(stop)
+                if(loadExpOut)
+                begin
                 state <= IDLE;
+                end
+                if(stop)
+                state <= WAIT_S;
               end
             end
             WAIT_S: begin
