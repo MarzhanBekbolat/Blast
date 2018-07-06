@@ -143,6 +143,7 @@ output hitTEST
              end
         else 
          begin
+         hitReg <= 1'b0;
          if(DataCounter==0)
          begin
           if(ShiftNo ==0)
@@ -212,8 +213,10 @@ output hitTEST
         end
       end
       SHIFT: begin
+     // dbValid <=1'b0;
        if(!hit)
        begin
+      // dbValid <=1'b0;
         shift <= 1'b1;
       load <= 1'b0;
       state <= SHIFTLOAD;
@@ -222,6 +225,7 @@ output hitTEST
       state <= IDLE;
       end
       SHIFTLOAD: begin
+      dbValid <= 1'b1;
       shift <= 1'b0;
       state <= WAIT_S;
       end
@@ -230,17 +234,22 @@ output hitTEST
               begin
                 loadDone <= 1'b1;
                 queryValidExp <= 1'b1;
+                dbValid <= 1'b0;
                 dbExpand <= ddr_rd_data;
                 ddr_rd <=1'b0;
                 if(loadExpOut)
                 begin
                 state <= IDLE;
                 end
-                if(stop)
-                state <= WAIT_S;
               end
+            if(stop)
+            begin
+            hitReg <=0;
+             state <= WAIT_S;
+            end
             end
             WAIT_S: begin
+            dbValid <=1'b1;
                    state <= IDLE;
             end
      endcase
@@ -261,6 +270,7 @@ output hitTEST
     .shift(shift),
     .load(load),
     .stop(stop),
+    .locationEnd(locationEnd),
     //output
     .ShiftNo(ShiftNo),
     .hit(hit),
