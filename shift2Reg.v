@@ -25,21 +25,38 @@ input clk,
 input rst,
 input load,
 input shift,
+input [8:0] ShiftNo,
+input stop,
 input [511:0] inData,
 input dataValid,
 output [511:0] outData
 );
 
 reg [533:0] shiftReg;
-
+ reg [8:0] k=0;
+ reg [8:0] ShiftNoReg;
+ reg state=0;
 assign outData = shiftReg[511:0];
+
+
+ localparam IDLE = 1'b0,
+             WAIT_SHIFT = 1'b1; 
+always @(posedge clk)
+begin
+if(!stop)
+ShiftNoReg <= ShiftNo;
+end
 
 always @(posedge clk)
 begin
-    /*if(rst)
-    shiftReg <=0;
+case(state)
+  IDLE: begin
+    if(stop)
+    begin
+   state <=WAIT_SHIFT;
+    end
     else
-    begin*/
+    begin
     if(load & shift)
     begin
         shiftReg[533:20] <= {2'b00,inData};
@@ -50,5 +67,14 @@ begin
     else if(shift)
         shiftReg <= {2'b00,shiftReg[533:2]};
   end
-  //end
+  end
+  WAIT_SHIFT: begin
+  for(k=0; k<ShiftNo-ShiftNoReg; k=k+1)
+     begin
+     shiftReg <= {2'b00,shiftReg[533:2]};
+     end
+  state <= IDLE;
+  end
+  endcase
+  end
 endmodule
