@@ -62,7 +62,8 @@
         else
         begin
             case(state)
-                IDLE:begin
+                IDLE:begin 
+                    stop <= 1'b0;
                     shiftNumber = shiftNo;  
                     addressCalc = dataCounter * 512 + shiftNumber;
                     i1 <= LocationQ;
@@ -73,7 +74,7 @@
                     locationEnd <= dataCounter * 512 + shiftNumber + 21;
                     if(queryValid)
                         Query <= inQuery;
-                    if(start)
+                    if(!stop & start)
                     begin
                         state <= WAIT;
                         load <= 1'b1;
@@ -88,8 +89,14 @@
                 end
                 LOAD1:begin
                     if(dataValid)
-                    begin    
-                        if(shiftNumber < 199)
+                    begin
+                        if(dataCounter == 0 & shiftNumber < 199)
+                        begin
+                            dataMerged[511:0] <= inDB;
+                            dataMerged[1023:512] <= 512'h0;
+                            state <= EXPAND;
+                        end    
+                        else if(shiftNumber < 199)
                          begin
                             dataMerged[1023:512] <= inDB;
                             state <= LOAD2;
@@ -102,12 +109,10 @@
                          else
                          begin
                             dataMerged[511:0] <= inDB;
+                            dataMerged[1023:512] <= 512'h0;
                             state <= EXPAND;
                          end
-                         state <= LOAD2;  
-                     end
-                     else
-                         state <= LOAD1;
+                    end
                 end
                 LOAD2:begin
                     load <= 1'b1; 
@@ -118,8 +123,7 @@
                     else if(shiftNumber > 290)
                     begin
                         addressCalc <= addressCalc + 512; //?????????????????????????????????????????????????????????????               
-                    end
-                    
+                    end          
                     if(loadDone)
                     begin
                         load <= 1'b0;
@@ -146,9 +150,19 @@
                 
                 EXPAND:begin
                         if(dataMerged[m1-:2] != Query[i1-:2] & dataMerged[m2+:2] != Query[i2+:2]) 
-                            stop = 1'b1;
+                        begin
+                            stop <= 1'b1;
+                            k1=0;
+                            k2=0;
+                            state <= IDLE;
+                        end
                         else if(k1 == range1 & k2 == range2)
-                            stop = 1'b1;
+                        begin
+                            k1=0;
+                            k2=0;
+                            stop <= 1'b1;
+                            state <= IDLE;
+                        end
                         else 
                         begin
                             if(k1 != range1)
