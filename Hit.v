@@ -32,6 +32,7 @@ input dataBaseValid,
 input shift,
 input load,
 input stop,
+input [31:0] locationEnd,
 //output
 output [8:0] ShiftNo,
 output reg hit,
@@ -66,7 +67,9 @@ wire [245:0] ouput;
   if (shift)// if(shift)
    begin
     ShiftNoIn <= ShiftNoIn+2;
- end 
+  end 
+  else if (stop)
+    ShiftNoIn <= locationEnd;
  end
 
 // At each clk find max of comparatpr outputs
@@ -81,7 +84,6 @@ always @(posedge clk)
      else 
        begin
        case(state)
-       
        IDLE: begin
        if(dataBaseValid)
        begin
@@ -101,6 +103,7 @@ always @(posedge clk)
          if(stop)
          begin
          hit <=0;
+         k=0;
          state <=IDLE;
          end
         end
@@ -117,6 +120,8 @@ always @(posedge clk)
  comparator c1(
     .clk(clk),
     .rst(rst),
+    .stop(stop),
+    .dbValid(dataBaseValid),
     .inQuery(queryReg[i+:22]),
     .inDB(dBCompareWmer),
     .isMatch(ouput[i/2])
@@ -131,6 +136,8 @@ always @(posedge clk)
  .rst(rst),
  .load(load),
  .shift(shift),
+ .ShiftNo(ShiftNoIn),
+ .stop(stop),
  .inData(dataBase),
  .dataValid(dataBaseValid),
  .outData(dbShiftRegOut)
