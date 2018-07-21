@@ -32,10 +32,12 @@ input dataBaseValid,
 input shift,
 input load,
 input stop,
+input [31:0] locationStart,
 input [31:0] locationEnd,
 //output
 output [8:0] ShiftNo,
-output reg hit,
+output wire hit,
+output reg startExpand,
 output [8:0] locationQ
     );
   localparam IDLE = 1'b0,
@@ -49,6 +51,16 @@ wire [245:0] ouput;
  //for output of comparators
  reg [8:0] ShiftNoIn=0; 
  reg [8:0] k;
+ reg [31:0] locationStartReg;
+ 
+ assign hit = |ouput;
+ 
+  always @(posedge clk)
+ begin
+  if(hit)
+      locationStartReg <=  locationStart;
+ end
+ 
    
  always @(posedge clk)
  begin
@@ -69,7 +81,12 @@ wire [245:0] ouput;
     ShiftNoIn <= ShiftNoIn+2;
   end 
   else if (stop)
+  begin
+  if(locationEnd -locationStartReg >= 200 )
+  ShiftNoIn <= locationStartReg +200;
+  else
     ShiftNoIn <= locationEnd;
+  end
  end
 
 // At each clk find max of comparatpr outputs
@@ -78,32 +95,34 @@ always @(posedge clk)
      if(rst)
         begin
         CurrentLocation <=0;
-        hit <=0;
+        startExpand <=0;
+        k <= 0;
         state <=IDLE;
         end 
      else 
        begin
        case(state)
        IDLE: begin
-       if(dataBaseValid)
+       if(dataBaseValid & hit)
        begin
-         for(k=0; k<246; k= k+1)
-         begin
+         //for(k=0; k<246; k= k+1)
+         //begin
          if(ouput[k]==1)
              begin
-             hit <=1;
+             startExpand <=1;
              CurrentLocation <= k*2;
-             k=246;
+             //k=246;
              state <=HITLOW;
              end
-         end
+         //end
+           else if(k < 246)
+                  k <= k+1;
          end
         end
         HITLOW: begin
          if(stop)
          begin
-         hit <=0;
-         k=0;
+         k<=0;
          state <=IDLE;
          end
         end
@@ -138,6 +157,7 @@ always @(posedge clk)
  .shift(shift),
  .ShiftNo(ShiftNoIn),
  .stop(stop),
+ .hit(hit),
  .inData(dataBase),
  .dataValid(dataBaseValid),
  .outData(dbShiftRegOut)

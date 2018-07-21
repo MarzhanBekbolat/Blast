@@ -173,6 +173,8 @@
                               i1 <= i1 - 2; 
                               if(dataMerged[m1-:2] == Query[i1-:2]) 
                                    locationStart <= locationStart - 2;
+                              else if(dataMerged[m2+:2] == Query[i2+:2]) // Added lines by me
+                                   locationStart <= locationStart - 2;
                             end
                             //else if(k1 == range1)
                             if(k2 != range2)
@@ -182,6 +184,8 @@
                                 m2 <= m2 + 2;
                                 i2 <= i2 + 2; 
                                 if(dataMerged[m2+:2] == Query[i2+:2]) 
+                                   locationEnd  <= locationEnd + 2;
+                                  else if(dataMerged[m1-:2] == Query[i1-:2]) 
                                    locationEnd  <= locationEnd + 2;
                             end    
                         end        

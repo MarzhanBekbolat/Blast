@@ -27,6 +27,7 @@ input load,
 input shift,
 input [8:0] ShiftNo,
 input stop,
+input hit,
 input [511:0] inData,
 input dataValid,
 output [511:0] outData
@@ -43,7 +44,7 @@ assign outData = shiftReg[511:0];
              WAIT_SHIFT = 1'b1; 
 always @(posedge clk)
 begin
-if(!stop)
+if( stop & hit)
 ShiftNoReg <= ShiftNo;
 end
 

@@ -34,7 +34,7 @@ input [511:0] query,
 input queryValid,
 //ouput for comparator
 //input rdNew,
-//output [10:0] maxScoreOut,
+//output [12:0] maxScoreOut,
 //output [31:0] outAddress,
 output [31:0] locationStart,
 output [31:0] locationEnd,
@@ -60,12 +60,14 @@ output hitTEST
  reg [8:0] locationQReg; 
  reg hitReg;
  wire [8:0] ShiftNoReg;
+ wire [31:0] outAddress;
  reg loadDone;
  //reg ready;
  reg queryValidExp;
  reg [511:0] dbExpand;  
  wire stop;
  reg dbValid;
+ wire startExpand;
  assign hitTEST = hit;
  localparam IDLE = 3'b000,
             WAIT = 3'b001,
@@ -125,7 +127,7 @@ output hitTEST
                      shift <=0;
                      end
         end
-     else*/ if(hit & !stop)
+     else*/ if(startExpand & !stop)
              begin
              hitReg <= 1'b1;
              locationQReg <= locationQ;
@@ -158,8 +160,13 @@ output hitTEST
                                     end  
                        else if (ShiftNo != 0 & (ShiftNo % 490 != 0))
                                     begin
+                                    if(!hit)
+                                    begin
                                     shift <=1'b0;
                                     state<= SHIFT;
+                                    end
+                                    else 
+                                    state <=IDLE;
                                     end
                        else if (ShiftNo % 490 == 0)
                                     begin
@@ -186,9 +193,14 @@ output hitTEST
                             end  
                else if (ShiftNo != 0 & (ShiftNo % 512 != 0))
                             begin
-                            shift <=1'b0;
-                            state<= SHIFT;
-                            end
+                                                  if(!hit)
+                                                  begin
+                                                  shift <=1'b0;
+                                                  state<= SHIFT;
+                                                  end
+                                                  else 
+                                                  state <=IDLE;
+                                                  end
                else if (ShiftNo % 512 == 0)
                             begin
                              DataCounter <= DataCounter +1; //Do I need new register to DataCounter?
@@ -270,10 +282,12 @@ output hitTEST
     .shift(shift),
     .load(load),
     .stop(stop),
+    .locationStart(locationStart),
     .locationEnd(locationEnd),
     //output
     .ShiftNo(ShiftNo),
     .hit(hit),
+    .startExpand(startExpand),
     .locationQ(locationQ)
         );
         
