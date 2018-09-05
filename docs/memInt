@@ -1,35 +1,14 @@
-
 `timescale 1ns / 1ps
 `define ddrAddrWidth 32
-//////////////////////////////////////////////////////////////////////////////////
-// Company: 
-// Engineer: 
-// 
-// Create Date: 28.05.2018 16:08:57
-// Design Name: 
-// Module Name: memInt
-// Project Name: 
-// Target Devices: 
-// Tool Versions: 
-// Description: 
-// 
-// Dependencies: 
-// 
-// Revision:
-// Revision 0.01 - File Created
-// Additional Comments:
-// 
-//////////////////////////////////////////////////////////////////////////////////
-
 
 module memInt(
 input clk,
 input rst,
-input ddr_rd_done,
-output reg ddr_rd,
-output reg [`ddrAddrWidth-1:0] readAdd,
-input ddr_rd_valid,
-input [511:0] ddr_rd_data,
+input ddr_rd_done, // acceptance for reading the data
+output reg ddr_rd, // request to read
+output reg [`ddrAddrWidth-1:0] readAdd, // address to read from ddr
+input ddr_rd_valid, // indicates ddr's readiness 
+input [511:0] ddr_rd_data, // 
 //input for query
 input [511:0] query,
 input queryValid,
@@ -53,6 +32,7 @@ output hitTEST
  reg [511:0] dbHit;
  //hit output
  wire hit;
+ wire highBitEnd;
  wire [8:0] ShiftNo; // bit number changed
  wire [8:0] locationQ; // bit number changed
  //Expand
@@ -104,46 +84,23 @@ output hitTEST
      case (state)
      IDLE: begin 
      queryValidExp <= 1'b0;
-     /*if(!hit)
-        begin
-        if(ShiftNo ==0)
-                     begin
-                     load <= 1'b0;
-                     DataCounter <= DataCounter +1;
-                     ddr_rd <= 1'b1;
-                     readAdd <= (DataCounter +1)*512; 
-                     state <= WAIT;
-                     //dbHit <= ddr_rd_data;
-                     shift <=1'b0;
-                     end  
-        else if (ShiftNo != 0 & (ShiftNo % 512 != 0))
-                     begin
-                     shift <=1;
-                     end
-        else if (ShiftNo % 512 == 0)
-                     begin
-                      DataCounter <= DataCounter +1; //Do I need new register to DataCounter?
-                      ddr_rd <= 1'b1;
-                      readAdd <= (DataCounter +1)*512; 
-                      state <= WAIT;
-                      //dbHit <= ddr_rd_data;
-                     load <= 0;
-                     shift <=0;
-                     end
-        end
-     else*/ if(startExpand & !stop)
+     if(stop)
+         begin
+           state <= SHIFT;
+           hitReg <= 0;
+         end
+      else if(startExpand & !stop)
              begin
              hitReg <= 1'b1;
              locationQReg <= locationQ;
              loadDone <= 1'b0;
              if(loadExpOut)
              begin
-             //queryValidExp <= 1'b1;
              ddr_rd <= 1'b1;
              readAdd <= outAddress; 
              state <= WAIT_EXP;
              end
-             //dbExpand <= ddr_rd_data;
+              
              shift = 1'b0;
              load = 1'b0;
              end
@@ -155,11 +112,9 @@ output hitTEST
           if(ShiftNo ==0 )   
                                     begin
                                     load <= 1'b0;
-                                    //DataCounter <= DataCounter +1;
                                     ddr_rd <= 1'b1;
                                     readAdd <= DataCounter*512; 
                                     state <= WAIT;
-                                    //dbHit <= ddr_rd_data;
                                     shift <=1'b0;
                                     end  
                        else if (ShiftNo != 0 & (ShiftNo % 490 != 0))
@@ -174,7 +129,7 @@ output hitTEST
                                     end
                        else if (ShiftNo % 490 == 0)
                                     begin
-                                     DataCounter <= DataCounter +1; //Do I need new register to DataCounter?
+                                     DataCounter <= DataCounter +1; 
                                      ddr_rd <= 1'b1;
                                      readAdd <= (DataCounter +1)*512; 
                                      state <= WAIT;
@@ -185,17 +140,7 @@ output hitTEST
          end
          else 
             begin
-               /*if(ShiftNo ==0)
-                            begin
-                            load <= 1'b0;
-                            //DataCounter <= DataCounter +1;
-                            ddr_rd <= 1'b1;
-                            readAdd <= DataCounter*512; 
-                            state <= WAIT;
-                            //dbHit <= ddr_rd_data;
-                            shift <=1'b0;
-                            end  
-               else*/ if (ShiftNo % 490 != 0 || ShiftNo==0)
+              if (ShiftNo % 490 != 0 || ShiftNo==0)
                             begin
                                                   if(!hit)
                                                   begin
@@ -237,7 +182,7 @@ output hitTEST
       end
       SHIFT: begin
      // dbValid <=1'b0;
-       if(!hit)
+       if(!hitReg)
        begin
       // dbValid <=1'b0;
         shift <= 1'b1;
@@ -261,19 +206,24 @@ output hitTEST
                 dbValid <= 1'b0;
                 dbExpand <= ddr_rd_data;
                 ddr_rd <=1'b0;
-                if(loadExpOut)
-                begin
-                state <= IDLE;
-                end
+                 
               end
-            if(stop)
+              if(loadDone)
+                state <= IDLE;
+              
+           /* if(stop)
             begin
-            hitReg <=0;
-             state <= WAIT_S;
-            end
+             //  if(highBitEnd)
+             //  begin 
+                 state <= SHIFT;
+                 hitReg <= 0;
+              // end
+             //  else
+               //  state <= IDLE;
+            end*/
             end
             WAIT_S: begin
-            dbValid <=1'b1;
+                   dbValid <=1'b1;
                    state <= IDLE;
             end
      endcase
@@ -300,7 +250,8 @@ output hitTEST
     .ShiftNo(ShiftNo),
     .hit(hit),
     .startExpand(startExpand),
-    .locationQ(locationQ)
+    .locationQ(locationQ),
+    .highBitEnd(highBitEnd)
         );
         
         
