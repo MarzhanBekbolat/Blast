@@ -29,9 +29,8 @@
     reg [1023:0] dataMerged;
     reg [511:0] Query;
     reg [2:0] state;
-    reg [10:0]highScore1;
-    reg [8:0]highScore2;
     reg rst1;
+    wire [10:0] maxScore;
          
     wire [8:0] range1;
     wire [8:0] range2;
@@ -79,8 +78,6 @@
                     m2 <= shiftNumber + 22;
                     locationStart <= dataCounter * 512 + shiftNumber;
                     locationEnd <= dataCounter * 512 + shiftNumber + 21;
-                    highScore1 <= 55;
-                    highScore2 <= 0;
                     startCalc <=0;
                     if(queryValid)
                         Query <= inQuery;
@@ -171,12 +168,16 @@
                         if(dataMerged[m1-:2] != Query[i1-:2] & dataMerged[m2+:2] != Query[i2+:2]) 
                         begin
                             stop <= 1'b1;
+                            b1 <= 0;
+                            b2 <= 0;
                             k1=0;
                             k2=0;
                             state <= IDLE;
                         end
                         else if(k1 == range1 & k2 == range2)
                         begin
+                            b1 <= 0;
+                            b2 <= 0;                        
                             k1=0;
                             k2=0;
                             stop <= 1'b1;
@@ -198,13 +199,16 @@
                               else if(dataMerged[m2+:2] == Query[i2+:2] & k2!= range2) // Added lines by me
                               begin
                                    locationStart <= locationStart - 2;
-                                   b1 = 0;
+                                   b1 <= 0;
                               end
-                              else if (k2 == range2)
+                              else
+                              begin
                               stop <= 1;
+                              b1 <= 0;
+                              end
                         end
                             else if(k1 == range1)
-                              b1 = 2;
+                              b1 <= 2;
                             if(k2 != range2)
                             begin
                                 stop <= 1'b0;
@@ -214,21 +218,22 @@
                                 if(dataMerged[m2+:2] == Query[i2+:2]) 
                                 begin
                                    locationEnd  <= locationEnd + 2;
-                                   b2 = 1;
+                                   b2 <= 1;
                                  end
                                   else if(dataMerged[m1-:2] == Query[i1-:2]& k1!= range1) 
                                  begin
                                    locationEnd  <= locationEnd + 2;
-                                   b2 = 0;
+                                   b2 <= 0;
                                  end
-                                  else if (k1 == range1)
+                                 else
                                   begin
-                                   b2 = 0;
+                                   b2 <= 0;
                                    stop <= 1;
-                                   end
+                                  end
+                                  
                             end  
                             else if(k2 == range2)  
-                            b2 = 2;
+                            b2 <= 2;
                         end        
                 end
             endcase
@@ -241,8 +246,10 @@
            .rst(rst1),
            .b1(b1),
            .b2(b2),
+           .stop(stop),
            .startCalc(startCalc),
-           .Score(Score)
+           .Score(Score),
+           .theHighestScore(maxScore)
         );
         
    endmodule
