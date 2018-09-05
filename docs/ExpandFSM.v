@@ -7,7 +7,6 @@
     input start,
     input queryValid,    
     input dataValid,
-    //input ready,
     input [8:0] shiftNo,
     input [16:0] dataCounter,
     input [511:0] inQuery,
@@ -19,6 +18,7 @@
     output [31:0] outAddress,
     output reg [31:0] locationStart,
     output reg [31:0] locationEnd,
+    output [10:0] Score,
     output reg stop
     );
     
@@ -29,6 +29,9 @@
     reg [1023:0] dataMerged;
     reg [511:0] Query;
     reg [2:0] state;
+    reg [10:0]highScore1;
+    reg [8:0]highScore2;
+    reg rst1;
          
     wire [8:0] range1;
     wire [8:0] range2;
@@ -38,6 +41,10 @@
     reg [8:0] i2;
     reg [9:0] m1;
     reg [9:0] m2;
+    reg [1:0] b1;
+    reg [1:0] b2;
+    reg startCalc;
+    
     
     localparam IDLE = 3'b000,
                LOAD1 = 3'b001,
@@ -47,7 +54,6 @@
                MERGE  = 3'b101;
     
     assign outAddress = addressCalc;
-    //assign difference = shiftNumber >= LocationQ ? (shiftNumber - LocationQ) : (LocationQ - shiftNumber);   
     assign  range1 = LocationQ <= `th ? LocationQ : `th;    
     assign  range2 = (512 - (LocationQ + 22)) <= `th ? (512 - (LocationQ + 22)) : `th;   
         
@@ -63,15 +69,19 @@
         begin
             case(state)
                 IDLE:begin 
+                    rst1 <= 1'b1;
                     stop <= 1'b0;
                     shiftNumber = shiftNo;  
                     addressCalc = dataCounter * 512 + shiftNumber;
                     i1 <= LocationQ;
-                    i2 <= LocationQ + 21;
-                    m1 <= dataCounter * 512 + shiftNumber;
-                    m2 <= dataCounter * 512 + shiftNumber + 21;
+                    i2 <= LocationQ + 22;
+                    m1 <= shiftNumber;
+                    m2 <= shiftNumber + 22;
                     locationStart <= dataCounter * 512 + shiftNumber;
                     locationEnd <= dataCounter * 512 + shiftNumber + 21;
+                    highScore1 <= 55;
+                    highScore2 <= 0;
+                    startCalc <=0;
                     if(queryValid)
                         Query <= inQuery;
                     if(!stop & start)
@@ -81,6 +91,8 @@
                     end
                 end
                 WAIT:begin
+                     rst1 <= 1'b0;
+                     //load <= 1'b0;
                      if(loadDone)
                      begin
                         load <= 1'b0;
@@ -95,49 +107,55 @@
                             dataMerged[511:0] <= inDB;
                             dataMerged[1023:512] <= 512'h0;
                             state <= EXPAND;
+                             startCalc <= 1;
                         end    
                         else if(shiftNumber < 199)
                          begin
+                            m1 <= shiftNumber + 512;
+                            m2 <= shiftNumber + 512 + 22;
                             dataMerged[1023:512] <= inDB;
                             state <= LOAD2;
+                            //load <= 1'b1;
                          end
                          else if(shiftNumber > 290)
                          begin
                             dataMerged[511:0] <= inDB;
                             state <= LOAD2;
+                            //load <= 1'b1;
                          end 
-                         else
+                         /*else
                          begin
                             dataMerged[511:0] <= inDB;
                             dataMerged[1023:512] <= 512'h0;
                             state <= EXPAND;
-                         end
+                             startCalc <= 1;
+                         end*/
                     end
                 end
                 LOAD2:begin
                     load <= 1'b1; 
                     if(shiftNumber < 199)
                     begin
-                       addressCalc <= addressCalc - 512; // ????????????????????????????????????????????????????????????    
+                       addressCalc <= addressCalc - 512; 
                     end
                     else if(shiftNumber > 290)
                     begin
-                        addressCalc <= addressCalc + 512; //?????????????????????????????????????????????????????????????               
+                        addressCalc <= addressCalc + 512;     
                     end          
                     if(loadDone)
                     begin
-                        load <= 1'b0;
                         state <= MERGE;
                     end 
                         
                 end
                 
                 MERGE:begin
+                     load <= 1'b0;
                     if(dataValid)
                     begin
                         if(shiftNumber < 199)
                         begin
-                             shiftNumber <= shiftNumber + 512; //             
+                             //shiftNumber <= shiftNumber + 512;              
                              dataMerged[511:0] <= inDB;                       
                         end
                         else if(shiftNumber > 290)
@@ -145,6 +163,7 @@
                              dataMerged[1023:512] <= inDB;               
                         end
                         state <= EXPAND;
+                        startCalc <= 1;
                     end
                 end
                 
@@ -165,18 +184,27 @@
                         end
                         else 
                         begin
-                            if(k1 != range1)
-                            begin
+                        if(k1 != range1)
+                        begin
                               stop <= 1'b0;
                               k1 <= k1 + 2;
-                              m1 <= m1 -2;
+                              m1 <= m1 - 2;
                               i1 <= i1 - 2; 
                               if(dataMerged[m1-:2] == Query[i1-:2]) 
+                              begin
                                    locationStart <= locationStart - 2;
-                              else if(dataMerged[m2+:2] == Query[i2+:2]) // Added lines by me
+                                   b1 <= 1;
+                              end     
+                              else if(dataMerged[m2+:2] == Query[i2+:2] & k2!= range2) // Added lines by me
+                              begin
                                    locationStart <= locationStart - 2;
-                            end
-                            //else if(k1 == range1)
+                                   b1 = 0;
+                              end
+                              else if (k2 == range2)
+                              stop <= 1;
+                        end
+                            else if(k1 == range1)
+                              b1 = 2;
                             if(k2 != range2)
                             begin
                                 stop <= 1'b0;
@@ -184,15 +212,37 @@
                                 m2 <= m2 + 2;
                                 i2 <= i2 + 2; 
                                 if(dataMerged[m2+:2] == Query[i2+:2]) 
+                                begin
                                    locationEnd  <= locationEnd + 2;
-                                  else if(dataMerged[m1-:2] == Query[i1-:2]) 
+                                   b2 = 1;
+                                 end
+                                  else if(dataMerged[m1-:2] == Query[i1-:2]& k1!= range1) 
+                                 begin
                                    locationEnd  <= locationEnd + 2;
-                            end    
+                                   b2 = 0;
+                                 end
+                                  else if (k1 == range1)
+                                  begin
+                                   b2 = 0;
+                                   stop <= 1;
+                                   end
+                            end  
+                            else if(k2 == range2)  
+                            b2 = 2;
                         end        
                 end
             endcase
         end
     end        
-
     
-    endmodule
+    
+    highScore ScoreX(
+           .clk(clk),
+           .rst(rst1),
+           .b1(b1),
+           .b2(b2),
+           .startCalc(startCalc),
+           .Score(Score)
+        );
+        
+   endmodule
