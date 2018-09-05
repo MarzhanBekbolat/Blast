@@ -8,8 +8,7 @@ input ddr_rd_done, // acceptance for reading the data
 output reg ddr_rd, // request to read
 output reg [`ddrAddrWidth-1:0] readAdd, // address to read from ddr
 input ddr_rd_valid, // indicates ddr's readiness 
-input [511:0] ddr_rd_data, // 
-//input for query
+input [511:0] ddr_rd_data, // data requested from ddr
 input [511:0] query,
 input queryValid,
 //ouput for comparator
@@ -17,39 +16,36 @@ input queryValid,
 //output [12:0] maxScoreOut,
 //output [31:0] outAddress,
 output [31:0] locationStart,
-output [31:0] locationEnd,
-output hitTEST
+output [31:0] locationEnd
     );
     
  //From memory interface to expand
- reg [16:0] DataCounter;
- reg [511:0] queryReg;
- reg [2:0] state;
+ reg [16:0] DataCounter; //???????????????????????????????
+ reg [511:0] queryReg; //to write query
+ reg [2:0] state; 
  // Hit input
- reg queryValidQ;
- reg shift;
- reg load;
- reg [511:0] dbHit;
+ reg queryValidQ; // queryValid for Hit.v
+ reg shift; // shift signal for Hit.v
+ reg load; // load signal for Hit.v
+ reg [511:0] dbHit; // database for Hit.v
  //hit output
- wire hit;
- wire highBitEnd;
- wire [8:0] ShiftNo; // bit number changed
- wire [8:0] locationQ; // bit number changed
+ wire hit; //hit signal that comes from Hit.v
+ wire highBitEnd; // signal that goes to Hit.v
+ wire [8:0] ShiftNo; // comes from Hit.v
+ wire [8:0] locationQ; // comes from Hit.v
  //Expand
- wire loadExpOut;
- reg queryValidReg;
- reg [8:0] locationQReg; 
- reg hitReg;
- wire [8:0] ShiftNoReg;
- wire [31:0] outAddress;
- reg loadDone;
- //reg ready;
- reg queryValidExp;
- reg [511:0] dbExpand;  
- wire stop;
- reg dbValid;
- wire startExpand;
- assign hitTEST = hit;
+ wire loadExpOut; //load request that comes from ExpandFSM.v
+ reg queryValidReg; // queryValid signal that goes to ExpandFSM.v
+ reg [8:0] locationQReg; // LocationQ that foes to ExpandFSM.v
+ reg hitReg; // start signal for ExpandFSM.v
+ wire [8:0] ShiftNoReg; // ShiftNo that goes to ExpandFSM.v
+ wire [31:0] outAddress; // Address of data requested by  ExpandFSM.v
+ reg loadDone; // Signal that goes o  ExpandFSM.v
+ reg queryValidExp; // dataValid signal for  ExpandFSM.v
+ reg [511:0] dbExpand;  // database for  ExpandFSM.v
+ wire stop; // output signal from  ExpandFSM.v 
+ reg dbValid; // databaseValid signal that goes to Hit.v
+ wire startExpand; 
  localparam IDLE = 3'b000,
             WAIT = 3'b001,
             SHIFT = 3'b011,
@@ -84,7 +80,7 @@ output hitTEST
      case (state)
      IDLE: begin 
      queryValidExp <= 1'b0;
-     if(stop)
+     if( highBitEnd)
          begin
            state <= SHIFT;
            hitReg <= 0;
@@ -244,8 +240,6 @@ output hitTEST
     .shift(shift),
     .load(load),
     .stop(stop),
-    .locationStart(locationStart),
-    .locationEnd(locationEnd),
     //output
     .ShiftNo(ShiftNo),
     .hit(hit),
@@ -267,7 +261,6 @@ output hitTEST
     .inQuery(queryReg),
     .LocationQ(locationQReg),
     .inDB(dbExpand), //dataBase 
-               
     .load(loadExpOut),
     .loadDone(loadDone),
     .outAddress(outAddress),
