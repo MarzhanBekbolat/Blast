@@ -10,8 +10,6 @@ input dataBaseValid,
 input shift,
 input load,
 input stop,
-input [31:0] locationStart,
-input [31:0] locationEnd,
 output [8:0] ShiftNo,
 output wire hit,
 output reg startExpand,
@@ -27,17 +25,9 @@ output reg highBitEnd
  reg [8:0] CurrentLocation; 
  reg [511:0] queryReg; 
  reg [8:0] ShiftNoIn=0; 
- reg [8:0] k;
- reg [31:0] locationStartReg;
- 
+ reg [8:0] k; 
  
  assign hit = |ouput;
- 
-  always @(posedge clk)
- begin
-  if(hit)
-      locationStartReg <=  locationStart;
- end
  
    
  always @(posedge clk)
@@ -73,6 +63,7 @@ always @(posedge clk)
        begin
          case(state)
          IDLE: begin
+          highBitEnd <= 0;
            if(hit & dataBaseValid)
            begin
              if(ouput[k]==1)
@@ -89,17 +80,42 @@ always @(posedge clk)
                   k <= 0;
              end     
            end
+           else if(!highBitEnd & hit)
+           begin
+           if(ouput[k]==1)
+                        begin
+                           startExpand <=1;
+                           CurrentLocation <= k*2;
+                           state <=HITLOW;
+                        end
+                        else if(k < 246) /////////////////////////////////////////////////////////////////////
+                                k <= k+1;
+                        else if(k == 246)
+                        begin
+                             highBitEnd <= 1; 
+                             k <= 0;
+                        end    
+           end
          end
          HITLOW: begin
            if(stop)
            begin
-            /* if(k < 246)
+             if(k < 246)
                k <= k+1;
-             else */
-             startExpand <=0;
-               k <= 0;   
+             startExpand <=0; 
            state <=IDLE;
            end
+           else if(k==246) // tentative
+           begin
+            k <= 0;
+            highBitEnd <= 1;
+             state <=IDLE;
+           end
+           /*else if(k < 246)
+           begin
+              k <= k+1;
+              state <=IDLE;
+           end*/
          end
          endcase
        end
@@ -133,6 +149,4 @@ always @(posedge clk)
  .outData(dbShiftRegOut)
  );
 
-
- 
 endmodule
