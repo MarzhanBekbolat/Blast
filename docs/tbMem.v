@@ -1,7 +1,7 @@
 
 
 `timescale 1ns / 1ps
-`define Period 10
+`define Period 5
 `define testNum 1024
 `define ddrAddrWidth 32
 `define Querry 'h1234abcd
@@ -36,8 +36,8 @@ begin
    ddr[0] = {512{1'b1}};
    ddr[1] = {512{1'b1}};
    ddr[2] = {512{1'b1}};             
-   ddr[3] = {512{1'b1}};
-   ddr[4] = 'h1234abcd;//{512{1'b1}};
+   ddr[3] = {512{1'b1}};//{512{1'b1}};
+   ddr[4] = {{480{1'b1}},32'h1234abc0};//{512{1'b1}};
    ddr[5] = {512{1'b1}};
    ddr[6] = {512{1'b1}};
    ddr[7] = {{480{1'b1}},32'h1234abc0};
