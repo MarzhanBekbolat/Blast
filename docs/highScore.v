@@ -5,8 +5,10 @@ module highScore(
        input rst,
        input [1:0] b1,
        input [1:0] b2,
+       input stop,
        input startCalc,
-       output [10:0] Score
+       output [10:0] Score, //для теста, потом надо будет убрать
+       output reg [10:0] theHighestScore
     );
     
     reg [10:0] highScore;
@@ -14,8 +16,20 @@ module highScore(
     
     always @(posedge clk)
     begin
+      if(stop)
+      begin
+         if(highScore > theHighestScore)
+            theHighestScore <= highScore;   
+      end
+    end
+    
+    always @(posedge clk)
+    begin
     if(rst)
-      highScore <= 55;
+    begin
+       highScore <= 55;
+       theHighestScore <= 0;
+    end
     else if(startCalc)
     begin
       if(b1 != 2 & b2 != 2)
@@ -45,6 +59,7 @@ module highScore(
          highScore <= highScore;
     end
     end
+    
     
     
       
