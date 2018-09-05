@@ -5,7 +5,8 @@ input stop,
 input dbValid,
 input [21:0] inQuery,
 input [21:0] inDB,
-output reg isMatch
+output reg isMatch,
+input highBitEnd  
     );
   
    
@@ -13,7 +14,7 @@ always @(posedge clk)
  begin
  if(rst)
  isMatch <= 0;
- else if(stop) 
+ else if(stop & highBitEnd) 
  begin
    isMatch <= 0;
  end
