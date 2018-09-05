@@ -21,12 +21,28 @@ module highScore(
       if(b1 != 2 & b2 != 2)
        begin
           if(b1 == 1 & b2 == 1)
-            highScore = highScore + 10;
-          else 
-            highScore = highScore + 1;    
+            highScore <= highScore + 10;
+          else if(b1 == 0 & b2 == 0)
+            highScore <= highScore;   
+          else if(b1 == 1 || b2 == 1)
+            highScore <= highScore + 1;
        end 
-     else 
-       highScore = highScore + 5;
+     else if(b1 == 2 & b2 != 2)
+     begin
+          if(b2 == 0)
+            highScore <= highScore; 
+          else if(b2 == 1)
+            highScore <= highScore + 5;
+    end
+    else if(b2 == 2 & b1 != 2)
+    begin
+         if(b1 == 0)
+            highScore <= highScore; 
+         else if(b1 == 1)
+            highScore <= highScore + 5;
+    end
+    else if(b2 == 2 & b1 == 2)
+         highScore <= highScore;
     end
     end
     
