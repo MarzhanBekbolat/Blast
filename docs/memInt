@@ -201,8 +201,7 @@ output [31:0] locationEnd
                 queryValidExp <= 1'b1;
                 dbValid <= 1'b0;
                 dbExpand <= ddr_rd_data;
-                ddr_rd <=1'b0;
-                 
+                ddr_rd <=1'b0;   
               end
               if(loadDone)
                 state <= IDLE;
@@ -264,8 +263,8 @@ output [31:0] locationEnd
     .load(loadExpOut),
     .loadDone(loadDone),
     .outAddress(outAddress),
-    .locationStart(locationStart),
-    .locationEnd(locationEnd),
+    .highestLocationStart(locationStart),
+    .highestLocationEnd(locationEnd),
     .stop(stop)
             );
 endmodule
