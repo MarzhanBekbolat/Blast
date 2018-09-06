@@ -6,21 +6,31 @@ module highScore(
        input [1:0] b1,
        input [1:0] b2,
        input stop,
+       input [31:0] locationStart,
+       input [31:0] locationEnd,
        input startCalc,
-       output [10:0] Score, //для теста, потом надо будет убрать
-       output reg [10:0] theHighestScore
+       output [10:0] Score, //??? ?????, ????? ???? ????? ??????
+       output  [10:0] theHighestScore,
+       output reg [31:0] highestLocationStart,
+       output reg [31:0] highestLocationEnd
     );
     
     reg [10:0] highScore;
+     reg [10:0] theHighestScoreReg=0;
     assign Score = highScore;
+    assign theHighestScore = theHighestScoreReg;
     
     always @(posedge clk)
     begin
       if(stop)
       begin
-         if(highScore > theHighestScore)
-            theHighestScore <= highScore;   
-      end
+         if(highScore > theHighestScoreReg)
+         begin
+            highestLocationStart <= locationStart;
+            highestLocationEnd <= locationEnd;
+            theHighestScoreReg <= highScore; 
+         end
+      end   
     end
     
     always @(posedge clk)
@@ -28,7 +38,7 @@ module highScore(
     if(rst)
     begin
        highScore <= 55;
-       theHighestScore <= 0;
+       //theHighestScore <= 0;
     end
     else if(startCalc)
     begin
