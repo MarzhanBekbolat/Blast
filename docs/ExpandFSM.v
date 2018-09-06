@@ -16,8 +16,8 @@
     output reg load,
     input  loadDone,
     output [31:0] outAddress,
-    output reg [31:0] locationStart,
-    output reg [31:0] locationEnd,
+    output  [31:0] highestLocationStart,
+    output  [31:0] highestLocationEnd,
     output [10:0] Score,
     output reg stop
     );
@@ -31,6 +31,8 @@
     reg [2:0] state;
     reg rst1;
     wire [10:0] maxScore;
+    reg [31:0] locationStart;
+    reg [31:0] locationEnd;
          
     wire [8:0] range1;
     wire [8:0] range2;
@@ -120,13 +122,13 @@
                             state <= LOAD2;
                             //load <= 1'b1;
                          end 
-                         /*else
+                         else
                          begin
                             dataMerged[511:0] <= inDB;
                             dataMerged[1023:512] <= 512'h0;
                             state <= EXPAND;
                              startCalc <= 1;
-                         end*/
+                         end
                     end
                 end
                 LOAD2:begin
@@ -247,9 +249,13 @@
            .b1(b1),
            .b2(b2),
            .stop(stop),
+           .locationStart(locationStart),
+           .locationEnd(locationEnd),
            .startCalc(startCalc),
            .Score(Score),
-           .theHighestScore(maxScore)
+           .theHighestScore(maxScore),
+           .highestLocationStart(highestLocationStart),
+           .highestLocationEnd(highestLocationEnd)
         );
         
    endmodule
