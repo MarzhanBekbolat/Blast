@@ -18,6 +18,8 @@ always @(posedge clk)
  begin
    isMatch <= 0;
  end
+ else if(highBitEnd)
+    isMatch <= 0;
  else if(dbValid)
  begin
     if(inQuery == inDB)
