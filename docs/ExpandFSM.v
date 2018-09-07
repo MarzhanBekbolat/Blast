@@ -18,8 +18,9 @@
     output [31:0] outAddress,
     output  [31:0] highestLocationStart,
     output  [31:0] highestLocationEnd,
-    output [10:0] Score,
-    output reg stop
+    output [10:0] maxScore,
+    output reg stop,
+    output processEnd
     );
     
     reg [9:0] shiftNumber;
@@ -30,12 +31,13 @@
     reg [511:0] Query;
     reg [2:0] state;
     reg rst1;
-    wire [10:0] maxScore;
+    wire [10:0] Score;
     reg [31:0] locationStart;
     reg [31:0] locationEnd;
          
     wire [8:0] range1;
     wire [8:0] range2;
+    reg [8:0] rangeD;
     reg [8:0] k1=0;
     reg [8:0] k2=0;
     reg [8:0] i1;
@@ -56,7 +58,8 @@
     
     assign outAddress = addressCalc;
     assign  range1 = LocationQ <= `th ? LocationQ : `th;    
-    assign  range2 = (512 - (LocationQ + 22)) <= `th ? (512 - (LocationQ + 22)) : `th;   
+    assign  range2 = (512 - (LocationQ + 22)) <= `th ? (512 - (LocationQ + 22)) : `th; 
+    //assign rangeD =  ( LocationQ <= `th ? LocationQ : `th)<= locationStart ? ( LocationQ <= `th ? LocationQ : `th) : locationStart;
         
     always @(posedge clk)
     begin
@@ -85,6 +88,7 @@
                         Query <= inQuery;
                     if(!stop & start)
                     begin
+                        rangeD <=  ( LocationQ <= `th ? LocationQ : `th)<= locationStart ? ( LocationQ <= `th ? LocationQ : `th) : locationStart;
                         state <= WAIT;
                         load <= 1'b1;
                     end
@@ -172,16 +176,16 @@
                             stop <= 1'b1;
                             b1 <= 0;
                             b2 <= 0;
-                            k1=0;
-                            k2=0;
+                            k1 <=0;
+                            k2 <=0;
                             state <= IDLE;
                         end
                         else if(k1 == range1 & k2 == range2)
                         begin
                             b1 <= 0;
                             b2 <= 0;                        
-                            k1=0;
-                            k2=0;
+                            k1 <=0;
+                            k2 <=0;
                             stop <= 1'b1;
                             state <= IDLE;
                         end
@@ -190,27 +194,40 @@
                         if(k1 != range1)
                         begin
                               stop <= 1'b0;
-                              k1 <= k1 + 2;
+                              //k1 <= k1 + 2;
                               m1 <= m1 - 2;
                               i1 <= i1 - 2; 
-                              if(dataMerged[m1-:2] == Query[i1-:2]) 
+                              if(dataCounter==0 & k1==rangeD)
                               begin
+                                // stop <=1;
+                                 k1 <=range1;
+                              end
+                              else if(dataMerged[m1-:2] == Query[i1-:2]) 
+                              begin
+                                   k1 <= k1 + 2;
                                    locationStart <= locationStart - 2;
                                    b1 <= 1;
                               end     
                               else if(dataMerged[m2+:2] == Query[i2+:2] & k2!= range2) // Added lines by me
                               begin
+                                    k1 <= k1 + 2;
                                    locationStart <= locationStart - 2;
                                    b1 <= 0;
                               end
                               else
                               begin
                               stop <= 1;
+                              k2 <= 0;
+                              k1 <= 0;
+                              state <= IDLE;
                               b1 <= 0;
+                              b2 <= 0;  
                               end
                         end
                             else if(k1 == range1)
+                            begin
                               b1 <= 2;
+                            end
                             if(k2 != range2)
                             begin
                                 stop <= 1'b0;
@@ -229,7 +246,11 @@
                                  end
                                  else
                                   begin
+                                   b1 <= 0;
                                    b2 <= 0;
+                                   k2 <= 0;
+                                   k1 <= 0;
+                                   state <= IDLE;
                                    stop <= 1;
                                   end
                                   
@@ -255,7 +276,8 @@
            .Score(Score),
            .theHighestScore(maxScore),
            .highestLocationStart(highestLocationStart),
-           .highestLocationEnd(highestLocationEnd)
+           .highestLocationEnd(highestLocationEnd),
+           .processEnd(processEnd)
         );
         
    endmodule
