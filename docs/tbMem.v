@@ -4,7 +4,7 @@
 `define Period 5
 `define testNum 1024
 `define ddrAddrWidth 32
-`define Querry 'h1234abcd
+`define Querry 'h1234abcd1234abcd1234abcd
 
 
 
@@ -15,6 +15,7 @@ reg rst;
 wire ddr_rd_done;
 wire ddr_rd;
 wire [`ddrAddrWidth-1:0] readAdd;
+wire processEnd;
 reg ddr_rd_valid;
 reg [511:0] ddr_rd_data;
 //input for query
@@ -26,7 +27,8 @@ reg queryValid;
 //output [31:0] outAddress,
 wire [31:0] locationStart;
 wire [31:0] locationEnd;
-wire hitTEST;
+wire [10:0] highestScore;
+
 
 reg [511:0] ddr [0:99];
 
@@ -37,7 +39,7 @@ begin
    ddr[1] = {512{1'b1}};
    ddr[2] = {512{1'b1}};             
    ddr[3] = {512{1'b1}};//{512{1'b1}};
-   ddr[4] = {{480{1'b1}},32'h1234abc0};//{512{1'b1}};
+   ddr[4] = {{384{1'b1}},128'h1234abcd1234abcd1234abcd1234abc0};//{512{1'b1}};
    ddr[5] = {512{1'b1}};
    ddr[6] = {512{1'b1}};
    ddr[7] = {{480{1'b1}},32'h1234abc0};
@@ -45,6 +47,11 @@ begin
    ddr[9] = 'h1234abcd;
    ddr[10] = {512{1'b1}};
    ddr[11] = {512{1'b1}};
+   ddr[12] = {512{1'b1}};
+   ddr[13] = 'h1234abcd;
+   ddr[14] = {512{1'b1}};
+   ddr[15] = {512{1'b1}};
+   ddr[16] = {512{1'b1}};
 end
        
 initial
@@ -75,7 +82,7 @@ begin
      queryValid <= 1'b1;
      query <= `Querry;
      @(posedge clk);
-     queryValid <= 1'b0;
+     //queryValid <= 1'b0;
      /*wait(ddr_rd);///////
      @(posedge clk);
      queryValid <= 1'b0;
@@ -201,7 +208,8 @@ memInt MEmory(
 //output [31:0] outAddress,
 .locationStart(locationStart),
 .locationEnd(locationEnd),
-.hitTEST(hitTEST)
+.highestScore(highestScore),
+.processEnd(processEnd)
     );
     
 endmodule
