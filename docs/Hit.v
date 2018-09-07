@@ -111,11 +111,6 @@ always @(posedge clk)
             highBitEnd <= 1;
              state <=IDLE;
            end
-           /*else if(k < 246)
-           begin
-              k <= k+1;
-              state <=IDLE;
-           end*/
          end
          endcase
        end
@@ -131,7 +126,7 @@ always @(posedge clk)
     .rst(rst),
     .stop(stop),
     .dbValid(dataBaseValid),
-    .inQuery(queryReg[i+:22]),
+    .inQuery(query[i+:22]),
     .inDB(dBCompareWmer),
     .isMatch(ouput[i/2]),
     .highBitEnd(highBitEnd)
